@@ -213,6 +213,7 @@ open class Chart: UIControl {
     // MARK: Private variables
 
     fileprivate var highlightShapeLayer: CAShapeLayer!
+    fileprivate var circleShapeLayer: CAShapeLayer!
     fileprivate var layerStore: [CAShapeLayer] = []
 
     fileprivate var drawingHeight: CGFloat!
@@ -706,6 +707,34 @@ open class Chart: UIControl {
         }
     }
 
+    func addShapeOnLineVertex(_ index: Int, radius: CGFloat) {
+        let x = self.series[0].data[index].x
+        let centerX = self.scaleValuesOnXAxis([x])
+        let y = self.series[0].data[index].y
+        let centerY = self.scaleValuesOnYAxis([y])
+        if let shapeLayer = circleShapeLayer {
+            // Use line already created
+            let path = CGMutablePath()
+            path.addArc(center: CGPoint(x: centerX[0], y: centerY[0]), radius: radius, startAngle: 0.0, endAngle: .pi*2, clockwise: true)
+            shapeLayer.path = path
+        } else {
+            // Create the line
+            let path = CGMutablePath()
+            path.addArc(center: CGPoint(x: centerX[0], y: centerY[0]), radius: radius, startAngle: 0.0, endAngle: .pi*2, clockwise: true)
+
+            let shapeLayer = CAShapeLayer()
+            shapeLayer.frame = self.bounds
+            shapeLayer.path = path
+            shapeLayer.strokeColor = UIColor.red.cgColor
+            shapeLayer.fillColor = nil
+            shapeLayer.lineWidth = 5.0
+
+            circleShapeLayer = shapeLayer
+            layer.addSublayer(shapeLayer)
+            layerStore.append(shapeLayer)
+        }
+    }
+
     func handleTouchEvents(_ touches: Set<UITouch>, event: UIEvent!) {
         let point = touches.first!
         let left = point.location(in: self).x
@@ -731,17 +760,23 @@ open class Chart: UIControl {
         for series in self.series {
             var index: Int? = nil
             let xValues = series.data.map({ (point: ChartPoint) -> Double in
-                return point.x })
+                return point.x
+            })
             let closest = Chart.findClosestInValues(xValues, forValue: x)
             if closest.lowestIndex != nil && closest.highestIndex != nil {
                 // return nearer index
-                if ( fabs(closest.lowestValue! - x) < fabs(closest.highestValue! - x)) {
+                if (fabs(closest.lowestValue! - x) < fabs(closest.highestValue! - x)) {
                     index = closest.lowestIndex
                 } else {
                     index = closest.highestIndex
                 }
             }
             indexes.append(index)
+
+            if let index = index {
+                addShapeOnLineVertex(index, radius: 10)
+            }
+
         }
         delegate!.didTouchChart(self, indexes: indexes, x: x, left: left)
     }
