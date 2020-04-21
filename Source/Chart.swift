@@ -734,8 +734,12 @@ open class Chart: UIControl {
                 return point.x })
             let closest = Chart.findClosestInValues(xValues, forValue: x)
             if closest.lowestIndex != nil && closest.highestIndex != nil {
-                // Consider valid only values on the right
-                index = closest.lowestIndex
+                // return nearer index
+                if ( fabs(closest.lowestValue! - x) < fabs(closest.highestValue! - x)) {
+                    index = closest.lowestIndex
+                } else {
+                    index = closest.highestIndex
+                }
             }
             indexes.append(index)
         }
