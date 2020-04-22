@@ -147,9 +147,9 @@ class StockChartViewController: UIViewController, ChartDelegate {
         
     }
 
-    func localVertexShapeCallBack(_ index:Int) -> CGPath? {
+    func  localVertexShapeCallBack(_ chart:Chart, _ index:Int) -> CGPath? {
         let radius:CGFloat = 5.0
-        if let point = self.chart.valuesForSeries(0, atIndex: index) {
+        if let point = chart.valuesForSeries(0, atIndex: index) {
             let centerX = chart.scaleValuesOnXAxis([point.x])[0]
             let centerY = chart.scaleValuesOnYAxis([point.y])[0]
             let path = CGMutablePath()
