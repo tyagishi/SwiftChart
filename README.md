@@ -1,3 +1,10 @@
+Forked version for followings
+=============================
+<ul>
+    <li>return nearest index of touched point</li>
+    <li>able to add call back function for creating path on the touched point</li>
+</ul>
+
 SwiftChart
 ===========
 
