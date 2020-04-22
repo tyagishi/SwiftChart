@@ -261,7 +261,6 @@ open class Chart: UIControl {
     private func commonInit() {
         backgroundColor = UIColor.clear
         contentMode = .redraw // redraw rects on bounds change
-//        self.vertexShapeCallBack = self.localVertexShapeCallBack
     }
 
     override open func draw(_ rect: CGRect) {
