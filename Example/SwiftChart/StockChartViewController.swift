@@ -147,16 +147,21 @@ class StockChartViewController: UIViewController, ChartDelegate {
         
     }
 
-    func  localVertexShapeCallBack(_ chart:Chart, _ index:Int) -> CGPath? {
+    func  localVertexShapeCallBack(_ chart:Chart, _ shapeLayer: CAShapeLayer,  _ index:Int) {
         let radius:CGFloat = 5.0
         if let point = chart.valuesForSeries(0, atIndex: index) {
             let centerX = chart.scaleValuesOnXAxis([point.x])[0]
             let centerY = chart.scaleValuesOnYAxis([point.y])[0]
             let path = CGMutablePath()
             path.addArc(center: CGPoint(x: centerX, y: centerY), radius: radius, startAngle: 0.0, endAngle: .pi*2, clockwise: true)
-            return path
+            
+            shapeLayer.path = path
+            let color = UIColor.red.withAlphaComponent(0.5)
+            shapeLayer.strokeColor = color.cgColor
+            shapeLayer.fillColor = nil
+            shapeLayer.lineWidth = 3.0
         }
-        return nil
+        return
     }
 
 }

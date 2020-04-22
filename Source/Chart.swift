@@ -217,7 +217,7 @@ open class Chart: UIControl {
 
     fileprivate var _vertexShapeLayer: CAShapeLayer!
 
-    open var vertexShapeCallBack:((_ chart:Chart, _ index:Int) -> CGPath?)? = nil
+    open var vertexShapeCallBack:((_ chart:Chart, _ shapeLayer: CAShapeLayer, _ index:Int) -> Void)? = nil
 
     var vertexShapeLayer: CAShapeLayer {
         get {
@@ -768,13 +768,8 @@ open class Chart: UIControl {
 
             if let index = index, let callback = vertexShapeCallBack {
                 let shapeLayer = self.vertexShapeLayer
-                if let shapePath = callback(self, index) {
-                    shapeLayer.path = shapePath
-                    shapeLayer.frame = self.bounds
-                    shapeLayer.strokeColor = UIColor.red.cgColor
-                    shapeLayer.fillColor = nil
-                    shapeLayer.lineWidth = 5.0
-                }
+                shapeLayer.frame = self.bounds
+                callback(self, shapeLayer, index)
             }
 
         }
