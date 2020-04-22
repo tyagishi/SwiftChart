@@ -68,7 +68,11 @@ class StockChartViewController: UIViewController, ChartDelegate {
         chart.yLabelsOnRightSide = true
         // Add some padding above the x-axis
         chart.minY = serieData.min()! - 5
-        
+
+        chart.hideHighlightLineOnTouchEnd = true
+
+        chart.vertexShapeCallBack = localVertexShapeCallBack
+
         chart.add(series)
         
     }
@@ -142,6 +146,17 @@ class StockChartViewController: UIViewController, ChartDelegate {
         chart.setNeedsDisplay()
         
     }
-    
-    
+
+    func localVertexShapeCallBack(_ index:Int) -> CGPath? {
+        let radius:CGFloat = 5.0
+        if let point = self.chart.valuesForSeries(0, atIndex: index) {
+            let centerX = chart.scaleValuesOnXAxis([point.x])[0]
+            let centerY = chart.scaleValuesOnYAxis([point.y])[0]
+            let path = CGMutablePath()
+            path.addArc(center: CGPoint(x: centerX, y: centerY), radius: radius, startAngle: 0.0, endAngle: .pi*2, clockwise: true)
+            return path
+        }
+        return nil
+    }
+
 }

@@ -22,7 +22,7 @@ public protocol ChartDelegate: class {
     func didTouchChart(_ chart: Chart, indexes: [Int?], x: Double, left: CGFloat)
 
     /**
-    Tells the delegate that the user finished touching the chart. The user will 
+    Tells the delegate that the user finished touching the chart. The user will
     "finish" touching the chart only swiping left/right outside the chart.
 
     - parameter chart: The chart that has been touched.
@@ -213,8 +213,23 @@ open class Chart: UIControl {
     // MARK: Private variables
 
     fileprivate var highlightShapeLayer: CAShapeLayer!
-    fileprivate var circleShapeLayer: CAShapeLayer!
     fileprivate var layerStore: [CAShapeLayer] = []
+
+    fileprivate var _vertexShapeLayer: CAShapeLayer!
+
+    open var vertexShapeCallBack:((_ index:Int) -> CGPath?)? = nil
+
+    var vertexShapeLayer: CAShapeLayer {
+        get {
+            if self._vertexShapeLayer != nil { return self._vertexShapeLayer}
+
+            let shapeLayer = CAShapeLayer()
+            _vertexShapeLayer = shapeLayer
+            layer.addSublayer(_vertexShapeLayer)
+            layerStore.append(_vertexShapeLayer)
+            return self._vertexShapeLayer
+        }
+    }
 
     fileprivate var drawingHeight: CGFloat!
     fileprivate var drawingWidth: CGFloat!
@@ -246,6 +261,7 @@ open class Chart: UIControl {
     private func commonInit() {
         backgroundColor = UIColor.clear
         contentMode = .redraw // redraw rects on bounds change
+//        self.vertexShapeCallBack = self.localVertexShapeCallBack
     }
 
     override open func draw(_ rect: CGRect) {
@@ -289,6 +305,11 @@ open class Chart: UIControl {
     /**
     Return the value for the specified series at the given index.
     */
+    open func valuesForSeries(_ seriesIndex: Int, atIndex dataIndex: Int?) -> (x: Double, y: Double)? {
+        if dataIndex == nil { return nil }
+        let series = self.series[seriesIndex] as ChartSeries
+        return series.data[dataIndex!]
+    }
     open func valueForSeries(_ seriesIndex: Int, atIndex dataIndex: Int?) -> Double? {
         if dataIndex == nil { return nil }
         let series = self.series[seriesIndex] as ChartSeries
@@ -411,7 +432,7 @@ open class Chart: UIControl {
         return (min: (x: min.x!, y: min.y!), max: (x: max.x!, max.y!))
     }
 
-    fileprivate func scaleValuesOnXAxis(_ values: [Double]) -> [Double] {
+    open func scaleValuesOnXAxis(_ values: [Double]) -> [Double] {
         let width = Double(drawingWidth)
 
         var factor: Double
@@ -425,7 +446,7 @@ open class Chart: UIControl {
         return scaled
     }
 
-    fileprivate func scaleValuesOnYAxis(_ values: [Double]) -> [Double] {
+    open func scaleValuesOnYAxis(_ values: [Double]) -> [Double] {
         let height = Double(drawingHeight)
         var factor: Double
         if max.y - min.y == 0 {
@@ -707,33 +728,6 @@ open class Chart: UIControl {
         }
     }
 
-    func addShapeOnLineVertex(_ index: Int, radius: CGFloat) {
-        let x = self.series[0].data[index].x
-        let centerX = self.scaleValuesOnXAxis([x])
-        let y = self.series[0].data[index].y
-        let centerY = self.scaleValuesOnYAxis([y])
-        if let shapeLayer = circleShapeLayer {
-            // Use line already created
-            let path = CGMutablePath()
-            path.addArc(center: CGPoint(x: centerX[0], y: centerY[0]), radius: radius, startAngle: 0.0, endAngle: .pi*2, clockwise: true)
-            shapeLayer.path = path
-        } else {
-            // Create the line
-            let path = CGMutablePath()
-            path.addArc(center: CGPoint(x: centerX[0], y: centerY[0]), radius: radius, startAngle: 0.0, endAngle: .pi*2, clockwise: true)
-
-            let shapeLayer = CAShapeLayer()
-            shapeLayer.frame = self.bounds
-            shapeLayer.path = path
-            shapeLayer.strokeColor = UIColor.red.cgColor
-            shapeLayer.fillColor = nil
-            shapeLayer.lineWidth = 5.0
-
-            circleShapeLayer = shapeLayer
-            layer.addSublayer(shapeLayer)
-            layerStore.append(shapeLayer)
-        }
-    }
 
     func handleTouchEvents(_ touches: Set<UITouch>, event: UIEvent!) {
         let point = touches.first!
@@ -773,8 +767,17 @@ open class Chart: UIControl {
             }
             indexes.append(index)
 
-            if let index = index {
-                addShapeOnLineVertex(index, radius: 10)
+            if let index = index, let callback = vertexShapeCallBack {
+                let shapeLayer = self.vertexShapeLayer
+                if let shapePath = callback(index) {
+                    shapeLayer.path = shapePath
+                    shapeLayer.frame = self.bounds
+                    shapeLayer.strokeColor = UIColor.red.cgColor
+                    shapeLayer.fillColor = nil
+                    shapeLayer.lineWidth = 5.0
+                    layer.addSublayer(shapeLayer)
+                    layerStore.append(shapeLayer)
+                }
             }
 
         }
@@ -789,6 +792,9 @@ open class Chart: UIControl {
         handleTouchEvents(touches, event: event)
         if self.hideHighlightLineOnTouchEnd {
             if let shapeLayer = highlightShapeLayer {
+                shapeLayer.path = nil
+            }
+            if let shapeLayer = _vertexShapeLayer {
                 shapeLayer.path = nil
             }
         }
