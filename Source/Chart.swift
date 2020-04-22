@@ -774,8 +774,6 @@ open class Chart: UIControl {
                     shapeLayer.strokeColor = UIColor.red.cgColor
                     shapeLayer.fillColor = nil
                     shapeLayer.lineWidth = 5.0
-                    layer.addSublayer(shapeLayer)
-                    layerStore.append(shapeLayer)
                 }
             }
 
